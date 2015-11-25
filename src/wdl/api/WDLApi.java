@@ -36,7 +36,8 @@ public class WDLApi {
 	 * @param te The TileEntity to save.
 	 */
 	public static void saveTileEntity(BlockPos pos, TileEntity te) {
-		if (!WDLPluginChannels.canSaveTileEntities()) {
+		if (!WDLPluginChannels.canSaveTileEntities(pos.getX() << 16,
+				pos.getZ() << 16)) {
 			logger.warn("API attempted to call saveTileEntity when " +
 					"saving TileEntities is not allowed!  Pos: " + pos +
 					", te: " + te + ".  StackTrace: ");
@@ -95,6 +96,12 @@ public class WDLApi {
 			for (Map.Entry<String, IWDLMessageType> e : types.entrySet()) {
 				WDLMessages.registerMessage(e.getKey(), e.getValue(), category);
 			}
+		}
+		if (mod instanceof ITileEntityEditor) {
+			WDL.tileEntityEditors.put(modName, (ITileEntityEditor) mod);
+		}
+		if (mod instanceof IEntityEditor) {
+			WDL.entityEditors.put(modName, (IEntityEditor) mod);
 		}
 		if (mod instanceof ISaveListener) {
 			WDL.saveListeners.put(modName, (ISaveListener) mod);

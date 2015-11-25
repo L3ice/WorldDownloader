@@ -1,5 +1,9 @@
-wdl.gui.about.translatorCredit=!!!!!!!! Put your name here, in the format of 'Translated to %s by Pokechu22' (language is automatically inserted).  Will not be displayed if this message starts with '!!!!!!!!'.
+# Translator name, preferably in the form of 'Translated to %s by <your name>'.
+# '%s' will be replaced with the language name automatically.
+# If left blank, it will not be displayed.
+wdl.translatorCredit=
 
+# Remaining values.
 wdl.gui.wdl.title=Options for %s
 wdl.gui.wdl.worldname=Name:
 wdl.gui.wdl.worldOverrides.name=World Overrides...
@@ -150,6 +154,34 @@ wdl.gui.rangePresets.server.installed=§aAs it is installed, this may be used.
 wdl.gui.rangePresets.server.notInstalled=§cAs it is not installed, this cannot be used.
 wdl.gui.rangePresets.cancel.description=Cancel without making changes.
 
+wdl.gui.overwriteChanges.title=World Downloader: Overwrite changes?
+wdl.gui.overwriteChanges.footer=Last downloaded on %tc, last played on %tc
+wdl.gui.overwriteChanges.captionTitle=The local copy of the world may have been changed.
+wdl.gui.overwriteChanges.captionSubtitle=Changes may be lost if not backed up.
+wdl.gui.overwriteChanges.asZip.name=Backup as zip (then start download)
+wdl.gui.overwriteChanges.asZip.description=Creates a .zip folder in the saves folder.%n%nThis backup can't be played in game unless extracted, but is useful if you just want to archive the changes.
+wdl.gui.overwriteChanges.asFolder.name=Backup folder (then start download)
+wdl.gui.overwriteChanges.asFolder.description=Creates a copy of the existing world folder.%n%nThis backup can be loaded in-game and will appear in the world list.
+wdl.gui.overwriteChanges.startNow.name=Allow overwriting (start download now)
+wdl.gui.overwriteChanges.startNow.description=Don't create any backup at all.%n%n§cAny changes made to the world will be overwritten.§r%nIf you haven't made any changes you want to keep, this is the right option.
+wdl.gui.overwriteChanges.cancel.name=Cancel (don't start download)
+wdl.gui.overwriteChanges.cancel.description=Don't start any download.%n%nReturn to the sever.  You can manually make a backup or just not download for the moment.
+wdl.gui.overwriteChanges.backingUp.title=Backing up the world...
+wdl.gui.overwriteChanges.backingUp.progress=%d / %d (%s)
+wdl.gui.overwriteChanges.backingUp.zip=Creating zip folder %s.
+wdl.gui.overwriteChanges.backingUp.folder=Copying world folder to %s.
+
+wdl.gui.entities.title=Entity configuration
+wdl.gui.entities.trackDistanceMode.default=Track Distance: Default
+wdl.gui.entities.trackDistanceMode.server=Track Distance: Server
+wdl.gui.entities.trackDistanceMode.user=Track Distance: User
+wdl.gui.entities.rangePresets=Range presets...
+wdl.gui.entities.entity.included=§aIncluded
+wdl.gui.entities.entity.ignored=§cIgnored
+wdl.gui.entities.group.enabled=§aEnabled
+wdl.gui.entities.group.disabled=§cAll disabled
+wdl.gui.entities.trackDistance=Track Distance: %d
+
 wdl.backup.none=No backup
 wdl.backup.folder=Copy world folder
 wdl.backup.zip=Zip a copy of a world
@@ -208,5 +240,23 @@ wdl.saveProgress.metadata.writingWorld=Writing world data
 wdl.saveProgress.extension.title=Extension: %s
 wdl.saveProgress.flushingIO.title=Procrastinating...
 wdl.saveProgress.flushingIO.subtitle=(Waiting for ThreadedFileIOBase to finish)
-wdl.saveProgress.backingUp.title=Backing up world...
-wdl.saveProgress.backingUpFile=Copying %s
+wdl.saveProgress.backingUp.title.zip=Backing up the world (creating zip)
+wdl.saveProgress.backingUp.title.folder=Backing up the world (copying folder)
+wdl.saveProgress.backingUp.preparing=Preparing...
+wdl.saveProgress.backingUp.file=Copying %s
+
+wdl.props.global.title=These are the default settings used across all servers when the individual server has not yet had a setting set.  You can manually modify them, if you want.
+wdl.props.base.title=These settings are shared across an entire server.  If multiworld is enabled, they act as the default values for the individual world properties; otherwise, they are used directly.
+wdl.props.world.title=These settings are used for a single world in a multiworld server.
+
+#Some of these messages are using format substitutions, so that special coloring can be added.
+wdl.intro.success=The WorldDownloader mod has been successfully installed!
+wdl.intro.usage=For information on how to use this mod, please see the %s.
+wdl.intro.forumsLink=Official MinecraftForums thread
+wdl.intro.contribute=To report a bug, suggest a feature, contribute code, or help translate, check out %s.
+wdl.intro.githubRepo=GitHub repository
+wdl.intro.stolen=%s: If you downloaded this mod from a location other than the Minecraft Forums or GitHub, you may have used a site that is %s redistributing this mod.
+wdl.intro.warning=WARNING
+wdl.intro.illegally=ILLEGALLY
+wdl.intro.stolenBeware=Beware of such sites, as they can include malware.  %s
+wdl.intro.stopModReposts=More information: StopModReposts!

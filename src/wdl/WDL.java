@@ -66,7 +66,9 @@ import net.minecraft.world.storage.MapData;
 import net.minecraft.world.storage.SaveHandler;
 import net.minecraft.world.storage.ThreadedFileIOBase;
 import wdl.WorldBackup.WorldBackupType;
+import wdl.api.IEntityEditor;
 import wdl.api.ISaveListener;
+import wdl.api.ITileEntityEditor;
 import wdl.api.IWDLMessageType;
 import wdl.api.IWDLMod;
 import wdl.api.WDLApi;
@@ -220,10 +222,20 @@ public class WDL {
 	private static boolean addedAPIHandlers = false;
 	
 	/**
-	 * All WDLMods that implement {@link ISaveListener}.
+	 * All IWDLMods that implement {@link ISaveListener}.
 	 */
 	public static Map<String, ISaveListener> saveListeners =
 			new HashMap<String, ISaveListener>();
+	/**
+	 * All IWDLMods that implement {@link ITileEntityEditor}.
+	 */
+	public static Map<String, ITileEntityEditor> tileEntityEditors =
+			new HashMap<String, ITileEntityEditor>();
+	/**
+	 * All IWDLMods that implement {@link IEntityEditor}.
+	 */
+	public static Map<String, IEntityEditor> entityEditors =
+			new HashMap<String, IEntityEditor>();
 	
 	// Initialization:
 	static {
@@ -667,6 +679,42 @@ public class WDL {
 			return false;
 		}
 	}
+	
+	/**
+	 * Applies all registered {@link ITileEntityEditor}s to the given chunk.
+	 * 
+	 * Note: {@link #importTileEntities(Chunk)} must be called before this method.
+	 */
+	public static void editTileEntities(Chunk chunk) {
+		for (Map.Entry<String, ITileEntityEditor> editor : tileEntityEditors
+				.entrySet()) {
+			try {
+				@SuppressWarnings("unchecked")
+				Map<BlockPos, TileEntity> tileEntityMap = (Map<BlockPos, TileEntity>) chunk
+						.getTileEntityMap();
+				
+				for (Map.Entry<BlockPos, TileEntity> entry : tileEntityMap
+						.entrySet()) {
+					boolean imported = !newTileEntities.containsKey(entry.getKey());
+					if (editor.getValue().shouldEdit(entry.getValue(), imported)) {
+						TileEntity newTE = editor.getValue().editTileEntity(
+								entry.getValue(), imported);
+						entry.setValue(newTE);
+					}
+				}
+			} catch (Exception ex) {
+				String chunkInfo;
+				if (chunk == null) {
+					chunkInfo = "null";
+				} else {
+					chunkInfo = "at " + chunk.xPosition + ", " + chunk.zPosition;
+				}
+				throw new RuntimeException("Failed to update tile entities "
+						+ "for chunk " + chunkInfo + " with extension "
+						+ editor.getKey(), ex);
+			}
+		}
+	}
 
 	/**
 	 * Saves all remaining chunks, world info and player info. Usually called
@@ -744,12 +792,9 @@ public class WDL {
 		if (backupType != WorldBackupType.NONE) {
 			chatMessage(WDLMessageTypes.SAVING, "Backing up the world...");
 			progressScreen.startMajorTask(
-					I18n.format("wdl.saveProgress.backingUp.title"), 1);
-			// TODO: This will be conjugated differently than the other messages.
-			// It uses the "Create a ..." rather than "creating a" form.  I may
-			// want to change this.
+					backupType.getTitle(), 1);
 			progressScreen.setMinorTaskProgress(
-					backupType.getDescription(), 1);
+					I18n.format("wdl.saveProgress.backingUp.preparing"), 1);
 			
 			try {
 				WorldBackup.backupWorld(saveHandler.getWorldDirectory(), 
@@ -971,18 +1016,23 @@ public class WDL {
 	public static void saveChunk(Chunk c) {
 		if (!WDLPluginChannels.canDownloadInGeneral()) { return; }
 		
-		if (!WDLPluginChannels.canDownloadInGeneral()) {
+		if (!WDLPluginChannels.canSaveTileEntities()) {
 			c.getTileEntityMap().clear();
 		}
 		
 		importTileEntities(c);
+		
+		if (WDLPluginChannels.canSaveTileEntities()) {
+			editTileEntities(c);
+		}
+		
 		c.setTerrainPopulated(true);
 
 		try {
 			ClassInheratanceMultiMap[] oldMaps = c.getEntityLists().clone();
 			ClassInheratanceMultiMap[] maps = c.getEntityLists();
 			
-			if (!WDLPluginChannels.canSaveEntities()) {
+			if (!WDLPluginChannels.canSaveEntities(c)) {
 				// Temporarily delete entities if saving them is disabled.
 				for (int i = 0; i < maps.length; i++) {
 					WrappedClassInheratanceMultiMap<Entity> map =
@@ -1069,6 +1119,25 @@ public class WDL {
 					e.posX = convertServerPos(e.serverPosX);
 					e.posY = convertServerPos(e.serverPosY);
 					e.posZ = convertServerPos(e.serverPosZ);
+					
+					for (Map.Entry<String, IEntityEditor> editor : entityEditors
+							.entrySet()) {
+						try {
+							if (editor.getValue().shouldEdit(e)) {
+								editor.getValue().editEntity(e);
+							}
+						} catch (Exception ex) {
+							String chunkInfo;
+							if (c == null) {
+								chunkInfo = "null";
+							} else {
+								chunkInfo = "at " + c.xPosition + ", " + c.zPosition;
+							}
+							throw new RuntimeException("Failed to edit entity " + e
+									+ " for chunk " + chunkInfo + " with extension "
+									+ editor.getKey(), ex);
+						}
+					}
 				}
 			}
 			
@@ -1158,7 +1227,7 @@ public class WDL {
 			worldFolder.mkdirs();
 			try {
 				theWorldProps.store(new FileWriter(new File(worldFolder,
-						"WorldDownloader.txt")), "");
+						"WorldDownloader.txt")), I18n.format("wdl.props.world.title"));
 			} catch (Exception e) {
 			}
 		} else if (!isMultiworld) {
@@ -1170,7 +1239,7 @@ public class WDL {
 
 		try {
 			baseProps.store(new FileWriter(new File(baseFolder,
-					"WorldDownloader.txt")), "");
+					"WorldDownloader.txt")), I18n.format("wdl.props.base.title"));
 		} catch (Exception e) {
 		}
 		
@@ -1183,7 +1252,7 @@ public class WDL {
 	public static void saveGlobalProps() {
 		try {
 			globalProps.store(new FileWriter(new File(minecraft.mcDataDir,
-					"WorldDownloader.txt")), "");
+					"WorldDownloader.txt")), I18n.format("wdl.props.global.title"));
 		} catch (Exception e) {
 			
 		}
